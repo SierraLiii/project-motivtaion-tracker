@@ -1,0 +1,548 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Motivation Tracker</title>
+<style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f4f9;
+      color: #1c1c1e;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 60px auto;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+      padding: 40px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+
+    .page { display: none; }
+    .visible { display: block; }
+
+    input, select {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin: 12px;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fcc;
+    }
+  
+
+button {
+  margin: 8px auto;
+  display: block;
+}
+
+.background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url('https://images.pexels.com/photos/9783346/pexels-photo-9783346.jpeg') center/cover no-repeat;
+  z-index: -2;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255,255,255,0.6);
+  z-index: -1;
+}
+
+
+input[type="radio"] {
+  margin-right: 8px;
+  transform: scale(1.2);
+}
+#commentBox {
+  margin-top: 20px;
+  width: 100%;
+  height: 80px;
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+
+.option-label {
+  display: block;
+  background: #f2f2f2;
+  padding: 12px 20px;
+  margin: 10px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  font-size: 16px;
+  text-align: center;
+}
+.option-label:hover {
+  background: #e0e0e0;
+  transform: scale(1.01);
+}
+.option-label.selected {
+  background: #007aff;
+  color: white;
+  font-weight: 500;
+}
+</style>
+</head>
+<body><div class="background"></div><div class="overlay"></div>
+<div class="container">
+<div class="page visible" id="page0">
+<h1>Welcome to the Project Motivation Tracker</h1>
+<p>This tool helps you reflect on your digital technologies project experience.</p>
+<button onclick="goToPage(1)">Begin</button>
+</div>
+<div class="page" id="page1">
+<h2>Tell us about yourself</h2>
+<input id="name" placeholder="Your name"/>
+<input id="studentID" placeholder="Student ID"/>
+<input id="project" placeholder="Project Name"/>
+<input id="date" type="date"/>
+<button onclick="validateAndNext()">Continue</button>
+</div>
+<div class="page" id="page2">
+<h2>Which phase of your project are you currently in?</h2>
+<p>Select the stage that best describes where you are right now.</p>
+<button onclick="selectPhase('phase1')">🚀 Phase 1: Getting Started (Week 1–2)</button><br/><br/>
+<button onclick="selectPhase('phase2')">🧠 Phase 2: Deep Dive (Week 3–4)</button><br/><br/>
+<button onclick="selectPhase('phase3')">🔁 Phase 3: Midpoint Review</button><br/><br/>
+<button onclick="selectPhase('phase4')">🎯 Phase 4: Finalising &amp; Reflecting</button>
+</div>
+<!-- Pages 3–6 will be inserted dynamically -->
+<div class="page" id="page3">
+<h2 id="questionText">Question appears here...</h2>
+<div id="scale">
+<input name="qval" style="display:none;" type="radio" value="5"/>
+<div class="option-label" data-value="5" onclick="selectOption('5')">Strongly Agree</div>
+<input name="qval" style="display:none;" type="radio" value="4"/>
+<div class="option-label" data-value="4" onclick="selectOption('4')">Agree</div>
+<input name="qval" style="display:none;" type="radio" value="3"/>
+<div class="option-label" data-value="3" onclick="selectOption('3')">Neutral</div>
+<input name="qval" style="display:none;" type="radio" value="2"/>
+<div class="option-label" data-value="2" onclick="selectOption('2')">Disagree</div>
+<input name="qval" style="display:none;" type="radio" value="1"/>
+<div class="option-label" data-value="1" onclick="selectOption('1')">Strongly Disagree</div>
+</div>
+<textarea id="commentBox" placeholder="Optional reflection..." rows="3"></textarea>
+<div id="feedbackText" style="margin-top:10px;color:#555;font-style:italic;"></div>
+<button onclick="nextQuestion()">Next</button>
+</div><div class="page" id="page6">
+<h2>Your Reflection Summary – This Phase</h2>
+<h3 style="margin-top:10px;">How much time did you spend on the following tasks?</h3>
+<div id="timeInputsPhase"></div>
+<button onclick="generatePhaseCharts()">🔍 Generate My Summary</button>
+<canvas height="300" id="phaseRadarChart" style="margin:30px auto; display:none;" width="300"></canvas>
+<canvas height="300" id="phaseTimeChart" style="margin:20px auto; display:none;" width="300"></canvas>
+<p id="phaseSummaryText" style="margin-top:20px;"></p>
+<button onclick="backToPhaseMenu()">Back to Phase Menu</button>
+</div><div class="page" id="page6">
+<h2>Your Reflection Summary – This Phase</h2>
+<canvas height="300" id="phaseRadarChart" style="margin:20px auto;" width="300"></canvas>
+<h3 style="margin-top:30px;">How much time did you spend (in minutes)?</h3>
+<input id="timeIdeation" placeholder="Ideation (e.g. 20)" type="number"/>
+<input id="timePlanning" placeholder="Planning (e.g. 30)" type="number"/>
+<input id="timeDevelopment" placeholder="Development (e.g. 40)" type="number"/>
+<input id="timeShowcase" placeholder="Showcase (e.g. 10)" type="number"/>
+<canvas height="300" id="phaseTimeChart" style="margin:20px auto;" width="300"></canvas>
+<p id="phaseSummaryText" style="margin-top:20px;"></p>
+<button onclick="backToPhaseMenu()">Back to Phase Menu</button>
+</div></div>
+<script>
+    let selectedPhase = '';
+
+    function goToPage(n) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+      document.getElementById('page' + n).classList.add('visible');
+    }
+
+    function validateAndNext() {
+      const name = document.getElementById("name").value.trim();
+      const id = document.getElementById("studentID").value.trim();
+      const proj = document.getElementById("project").value.trim();
+      const date = document.getElementById("date").value.trim();
+      if (!name || !id || !proj || !date) {
+        alert("Please complete all fields.");
+        return;
+      }
+      goToPage(2);
+    }
+
+    function selectPhase(phaseId) {
+      selectedPhase = phaseId;
+      goToPage(3); // will branch logic to correct question group
+    }
+  
+
+
+let currentQuestion = 0;
+let questions = [];
+let responses = [];
+
+const allQuestions = {
+  phase1: [
+    { text: "I had control over how I designed or built my project.", dim: "Autonomy" },
+    { text: "I understood what success looked like for this part of my project.", dim: "Competence" },
+    { text: "I was interested or excited about the topic I was working on.", dim: "Interest" }
+  ],
+  phase2: [
+    { text: "I felt confident using the tools and platforms involved (e.g. Python, Scratch).", dim: "Competence" },
+    { text: "I received helpful support from my teacher or classmates.", dim: "Relatedness" },
+    { text: "I was able to make decisions without always being told what to do.", dim: "Autonomy" }
+  ],
+  phase3: [
+    { text: "I learned something new that I feel proud of.", dim: "Competence" },
+    { text: "I contributed ideas that were valued by the group.", dim: "Relatedness" },
+    { text: "I still feel interested in the project topic.", dim: "Interest" }
+  ],
+  phase4: [
+    { text: "I feel more confident in my technical skills than when I started.", dim: "Competence" },
+    { text: "I had opportunities to be creative in my work.", dim: "Autonomy" },
+    { text: "I feel proud of what I’ve created.", dim: "Mastery" }
+  ]
+};
+
+const feedbackPhrases = {
+  5: "🌟 Awesome! Keep up the great mindset.",
+  4: "👍 Good! You're on the right track.",
+  3: "🙂 Okay. Think about what might help boost this next time.",
+  2: "😕 Let's explore how to improve this experience.",
+  1: "💡 Don't worry—challenges mean you're learning. Keep going!"
+};
+
+function nextQuestion() {
+  const selected = document.querySelector('input[name="qval"]:checked');
+  if (!selected) {
+    alert("Please select a response.");
+    return;
+  }
+  const value = parseInt(selected.value);
+  const comment = document.getElementById("commentBox").value;
+  responses.push({ 
+    question: questions[currentQuestion].text, 
+    value: value, 
+    comment: comment 
+  });
+  document.getElementById("feedbackText").innerText = feedbackPhrases[value];
+
+  currentQuestion++;
+  if (currentQuestion >= questions.length) {
+    goToPage(6); // go to summary (Page 6 placeholder)
+  } else {
+    loadQuestion();
+  }
+}
+
+function loadQuestion() {
+  const q = questions[currentQuestion];
+  document.getElementById("questionText").innerText = q.text;
+  document.querySelectorAll('input[name="qval"]').forEach(el => el.checked = false);
+  document.getElementById("commentBox").value = "";
+document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+  document.getElementById("feedbackText").innerText = "";
+}
+
+function selectPhase(phaseId) {
+  selectedPhase = phaseId;
+  questions = allQuestions[phaseId];
+  currentQuestion = 0;
+  responses = [];
+  loadQuestion();
+  goToPage(3);
+}
+
+
+function goToPage(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+  document.getElementById('page' + n).classList.add('visible');
+}
+
+// Called after final question is submitted
+function goToPage6() {
+  generateCharts();
+  goToPage(6);
+}
+
+function nextQuestion() {
+  const selected = document.querySelector('input[name="qval"]:checked');
+  if (!selected) {
+    alert("Please select a response.");
+    return;
+  }
+  const value = parseInt(selected.value);
+  const comment = document.getElementById("commentBox").value;
+  responses.push({ 
+    question: questions[currentQuestion].text, 
+    value: value, 
+    comment: comment,
+    dim: questions[currentQuestion].dim
+  });
+  document.getElementById("feedbackText").innerText = feedbackPhrases[value];
+  currentQuestion++;
+  if (currentQuestion >= questions.length) {
+    goToPage6(); // final
+  } else {
+    loadQuestion();
+  }
+}
+
+function generateCharts() {
+  const dims = ['Autonomy','Competence','Relatedness','Interest','Mastery'];
+  const radarData = { Autonomy:0, Competence:0, Relatedness:0, Interest:0, Mastery:0 };
+  const counts = { Autonomy:0, Competence:0, Relatedness:0, Interest:0, Mastery:0 };
+
+  responses.forEach(r => {
+    if (r.dim in radarData) {
+      radarData[r.dim] += r.value;
+      counts[r.dim]++;
+    }
+  });
+
+  const radarVals = dims.map(k => counts[k] ? radarData[k]/counts[k] : 0);
+
+  new Chart(document.getElementById("radarChart"), {
+    type: 'radar',
+    data: {
+      labels: dims,
+      datasets: [{
+        label: "Motivation Profile",
+        data: radarVals,
+        fill: true,
+        backgroundColor: "rgba(0,122,255,0.2)",
+        borderColor: "#007aff",
+        pointBackgroundColor: "#007aff"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          suggestedMin: 0,
+          suggestedMax: 5,
+          ticks: { stepSize: 1 }
+        }
+      }
+    }
+  });
+
+  // Map high scores to more time on Showcase/Ideation, low = more Development time
+  const meanScore = radarVals.reduce((a,b)=>a+b,0)/radarVals.length;
+  const timeData = [
+    Math.round(20 + radarVals[3]*4),  // Ideation ~ Interest
+    Math.round(30 + radarVals[1]*4),  // Planning ~ Competence
+    Math.round(40 - meanScore*3),     // Development ~ inversely to motivation
+    Math.round(20 + radarVals[4]*3)   // Showcase ~ Mastery
+  ];
+
+  new Chart(document.getElementById("timeChart"), {
+    type: 'pie',
+    data: {
+      labels: ["Ideation","Planning","Development","Showcase"],
+      datasets: [{
+        data: timeData,
+        backgroundColor: ['#0ea5e9', '#6366f1', '#64748b', '#06b6d4', '#fb7185', '#1e40af']
+      }]
+    },
+    options: {
+      plugins: {
+        title: {
+          display: true,
+          text: "Estimated Time Distribution",
+          font: { size: 16 }
+        }
+      }
+    }
+  });
+
+  const high = dims.filter((d,i)=>radarVals[i]>=4);
+  const low = dims.filter((d,i)=>radarVals[i]<=3);
+  let summary = "";
+  if (high.length)
+    summary += "🌟 You're doing well in: " + high.join(", ") + ". ";
+  if (low.length)
+    summary += "💡 Consider focusing on: " + low.join(", ") + " for improvement. ";
+  summary += "Great job reflecting on your motivation!";
+  document.getElementById("summaryText").innerText = summary;
+}
+
+function selectOption(value) {
+  document.querySelectorAll('.option-label').forEach(l => l.classList.remove('selected'));
+  const selected = document.querySelector('[data-value="'+value+'"]');
+  selected.classList.add('selected');
+  document.querySelector('input[name="qval"][value="'+value+'"]').checked = true;
+}
+
+
+let allResponses = [];
+
+function goToPage6() {
+  generatePhaseCharts();
+  goToPage(6);
+}
+
+function backToPhaseMenu() {
+  // Store time entry
+  const phaseTime = {
+    phase: selectedPhase,
+    ideation: parseInt(document.getElementById("timeIdeation").value || 0),
+    planning: parseInt(document.getElementById("timePlanning").value || 0),
+    development: parseInt(document.getElementById("timeDevelopment").value || 0),
+    showcase: parseInt(document.getElementById("timeShowcase").value || 0)
+  };
+  allResponses.push({ phase: selectedPhase, answers: responses, time: phaseTime });
+  goToPage(2); // return to phase selection
+}
+
+
+
+
+function generatePhaseCharts() {
+  const dims = ['Autonomy','Competence','Relatedness','Interest','Mastery'];
+  const radarData = { Autonomy:0, Competence:0, Relatedness:0, Interest:0, Mastery:0 };
+  const counts = { Autonomy:0, Competence:0, Relatedness:0, Interest:0, Mastery:0 };
+
+  responses.forEach(r => {
+    if (r.dim in radarData) {
+      radarData[r.dim] += r.value;
+      counts[r.dim]++;
+    }
+  });
+
+  // define time fields for each phase
+  const timeFields = {
+    phase1: ["Exploring Ideas", "Organising Resources", "Planning", "Early Drafting"],
+    phase2: ["Coding", "Research", "Testing Attempts", "Documentation"],
+    phase3: ["Self-checking", "Peer Feedback", "Refining", "Troubleshooting"],
+    phase4: ["Design Polish", "Final Testing", "Presentation Prep", "Reflection"]
+  };
+
+  const timeLabels = timeFields[selectedPhase];
+  const values = [];
+  let allFilled = true;
+
+  for (let i = 0; i < timeLabels.length; i++) {
+    const v = parseInt(document.getElementById("time" + i).value || 0);
+    if (!v) allFilled = false;
+    values.push(v);
+  }
+
+  if (!allFilled) {
+    alert("Please enter time for all four tasks.");
+    return;
+  }
+
+  document.getElementById("phaseRadarChart").style.display = "block";
+  document.getElementById("phaseTimeChart").style.display = "block";
+
+  const radarScores = dims.map(k => counts[k] ? radarData[k]/counts[k] : 0);
+  const ctxRadar = document.getElementById("phaseRadarChart").getContext("2d");
+  new Chart(ctxRadar, {
+    type: 'radar',
+    data: {
+      labels: dims,
+      datasets: [{
+        label: "This Phase",
+        data: radarScores,
+        fill: true,
+        backgroundColor: "rgba(52,152,219,0.2)",
+        borderColor: "#3498db",
+        pointBackgroundColor: "#3498db"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          suggestedMin: 0,
+          suggestedMax: 5,
+          ticks: { stepSize: 1 }
+        }
+      }
+    }
+  });
+
+  const ctxPie = document.getElementById("phaseTimeChart").getContext("2d");
+  new Chart(ctxPie, {
+    type: 'pie',
+    data: {
+      labels: timeLabels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['#0ea5e9', '#6366f1', '#64748b', '#06b6d4', '#fb7185', '#1e40af']
+      }]
+    },
+    options: {
+      plugins: {
+        title: {
+          display: true,
+          text: "Time Distribution – This Phase",
+          font: { size: 16 }
+        }
+      }
+    }
+  });
+
+  const summary = [];
+  dims.forEach((d, i) => {
+    if (counts[d] > 0) {
+      if (radarScores[i] >= 4) summary.push(`✔ Strong ${d}`);
+      else if (radarScores[i] <= 3) summary.push(`✏️ Needs support in ${d}`);
+    }
+  });
+  document.getElementById("phaseSummaryText").innerText = summary.join(" | ");
+}
+
+// dynamic time input builder
+function loadTimeInputsForPhase() {
+  const container = document.getElementById("timeInputsPhase");
+  container.innerHTML = "";
+
+  const timeLabels = {
+    phase1: ["Exploring Ideas", "Organising Resources", "Planning", "Early Drafting"],
+    phase2: ["Coding", "Research", "Testing Attempts", "Documentation"],
+    phase3: ["Self-checking", "Peer Feedback", "Refining", "Troubleshooting"],
+    phase4: ["Design Polish", "Final Testing", "Presentation Prep", "Reflection"]
+  }[selectedPhase];
+
+  for (let i = 0; i < timeLabels.length; i++) {
+    const input = document.createElement("input");
+    input.type = "number";
+    input.id = "time" + i;
+    input.placeholder = timeLabels[i] + " (e.g. 20)";
+    container.appendChild(input);
+  }
+}
+
+function goToPage6() { loadTimeInputsForPhase(); goToPage(6); }</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
